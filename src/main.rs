@@ -1,5 +1,7 @@
 use std::{env, process::exit};
 mod init;
+pub mod log;
+mod run;
 pub mod template;
 pub mod utils;
 
@@ -22,6 +24,7 @@ fn main() {
 
     match args.get(1).map(|s| s.as_str()) {
         Some("init") => init::init_config(),
+        Some("run") => run::run_scrapper(),
         Some("help") => utils::rustyspider_usage(),
         _ => {
             usage_and_exit("Invalid command".to_string());
