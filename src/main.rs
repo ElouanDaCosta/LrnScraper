@@ -1,6 +1,7 @@
 use std::{env, process::exit};
 mod init;
-mod utils;
+pub mod template;
+pub mod utils;
 
 const VERSION: &'static str = "0.1.0";
 
