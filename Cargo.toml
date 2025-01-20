@@ -5,3 +5,4 @@ edition = "2024"
 
 [dependencies]
 serde_json = "1.0.137"
+colored = "3.0.0"
