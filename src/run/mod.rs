@@ -1,5 +1,6 @@
 use std::fs;
 use std::thread;
+use std::time::Duration;
 
 use crate::log;
 use serde::{Deserialize, Serialize};
@@ -20,13 +21,17 @@ pub fn run_scrapper() {
     log::info_log("Getting the config file content...".to_string());
     let websites = get_config_file_content();
     log::info_log("Start scraping process...".to_string());
-    // let urls: Vec<Vec<String>> = websites.iter().map(|x| x.urls.clone()).collect();
-    // create_thread();
+    std::thread::scope(|_scope| {
+        let mut threads: Vec<thread::JoinHandle<()>> = Vec::new();
+        for website in websites.clone() {
+            let thread = std::thread::spawn(move || download_website(&website));
+            threads.push(thread);
+        }
 
-    let threads: Vec<_> = websites.iter().map(|i| download_thread(i)).collect();
-    for handle in threads {
-        handle.join().unwrap();
-    }
+        for thread in threads {
+            thread.join().unwrap();
+        }
+    });
 }
 
 fn get_config_file_content() -> Vec<WebConfig> {
@@ -45,14 +50,6 @@ fn get_config_file_content() -> Vec<WebConfig> {
 }
 
 // create a new thread that will download the html from given url
-fn download_thread(website: &WebConfig) -> thread::JoinHandle<()> {
-    let website_clone = website.clone();
-    let thread = thread::spawn(move || {
-        // thread code here
-        for url in website_clone.urls {
-            println!("{}", url);
-        }
-    });
-
-    thread
+fn download_website(website: &WebConfig) {
+    println!("Thread started for id: {}", website.id);
 }
