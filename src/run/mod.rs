@@ -1,4 +1,5 @@
 use std::fs;
+use std::thread;
 
 use crate::log;
 use serde::{Deserialize, Serialize};
@@ -16,10 +17,16 @@ pub struct WebConfig {
 }
 
 pub fn run_scrapper() {
-    log::info_log("Start scraping process...".to_string());
     log::info_log("Getting the config file content...".to_string());
     let websites = get_config_file_content();
-    print!("{:?}", websites);
+    log::info_log("Start scraping process...".to_string());
+    // let urls: Vec<Vec<String>> = websites.iter().map(|x| x.urls.clone()).collect();
+    // create_thread();
+
+    let threads: Vec<_> = websites.iter().map(|i| download_thread(i)).collect();
+    for handle in threads {
+        handle.join().unwrap();
+    }
 }
 
 fn get_config_file_content() -> Vec<WebConfig> {
@@ -35,4 +42,17 @@ fn get_config_file_content() -> Vec<WebConfig> {
         });
     }
     websites
+}
+
+// create a new thread that will download the html from given url
+fn download_thread(website: &WebConfig) -> thread::JoinHandle<()> {
+    let website_clone = website.clone();
+    let thread = thread::spawn(move || {
+        // thread code here
+        for url in website_clone.urls {
+            println!("{}", url);
+        }
+    });
+
+    thread
 }
