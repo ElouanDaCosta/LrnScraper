@@ -1,9 +1,11 @@
 use std::fs;
 use std::thread;
-use std::time::Duration;
 
 use crate::log;
 use serde::{Deserialize, Serialize};
+
+//TODO
+// can scrap by html tag, css class or custom ?
 
 #[derive(Deserialize, Serialize, Debug, Clone, PartialEq)]
 pub struct WebConfigData {
@@ -32,6 +34,7 @@ pub fn run_scrapper() {
             thread.join().unwrap();
         }
     });
+    log::info_log("Scraping process finished successfully.".to_string());
 }
 
 fn get_config_file_content() -> Vec<WebConfig> {
@@ -52,4 +55,9 @@ fn get_config_file_content() -> Vec<WebConfig> {
 // create a new thread that will download the html from given url
 fn download_website(website: &WebConfig) {
     println!("Thread started for id: {}", website.id);
+    for url in &website.urls {
+        let response = reqwest::blocking::get(url);
+        let html_content = response.unwrap().text().unwrap();
+        println!("{}", html_content);
+    }
 }
