@@ -58,6 +58,20 @@ fn download_website(website: &WebConfig) {
     for url in &website.urls {
         let response = reqwest::blocking::get(url);
         let html_content = response.unwrap().text().unwrap();
-        println!("{}", html_content);
+        let test = parse_html_content(html_content, "title".to_string());
     }
+}
+
+fn parse_html_content(data: String, tag_selector: String) -> Vec<String> {
+    let dom = tl::parse(&data, tl::ParserOptions::default()).unwrap();
+    let parser = dom.parser();
+    let elements = dom
+        .query_selector(&tag_selector)
+        .expect("Failed to find element");
+    let mut nodes = Vec::new();
+    for element in elements {
+        let node = element.get(parser).unwrap();
+        nodes.push(node.inner_text(parser).to_string());
+    }
+    nodes
 }
