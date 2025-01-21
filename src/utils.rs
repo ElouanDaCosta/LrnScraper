@@ -9,6 +9,7 @@ Usage: rustyspider command [options]
 RustySpider's web scraper cli.
 
 Commands:
+    run             Run the scraping process
     init            Init the config file of RustySpider
     help            Show this help message
 
