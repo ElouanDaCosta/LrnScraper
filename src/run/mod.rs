@@ -24,7 +24,7 @@ pub fn run_scrapper() {
     log::info_log("Getting the config file content...".to_string());
     let websites = get_config_file_content();
     log::info_log("Start scraping process...".to_string());
-    std::thread::scope(|_scope| {
+    std::thread::scope(|scope| {
         let mut threads: Vec<thread::JoinHandle<()>> = Vec::new();
         for website in websites.clone() {
             let thread = std::thread::spawn(move || download_website(&website));
@@ -53,18 +53,23 @@ fn get_config_file_content() -> Vec<WebConfig> {
     websites
 }
 
-// create a new thread that will download the html from given url
+// create a new thread that scrape the html from given url
 fn download_website(website: &WebConfig) {
     println!("Thread started for id: {}", website.id);
     for url in &website.urls {
         let response = reqwest::blocking::get(url);
         let html_from_request = response.unwrap().text().unwrap();
         let html_from_browser = browser::browse_website(&url);
+        if html_from_browser.is_err() {
+            log::error_log(html_from_browser.as_ref().unwrap_err().to_string());
+        }
         let parser = parse_html_content(html_from_browser.unwrap(), "title".to_string());
         println!("{:?}", parser);
     }
+    println!("Thread finished for id: {}", website.id);
 }
 
+// parse the given html document
 fn parse_html_content(data: String, tag_selector: String) -> Vec<String> {
     let dom = tl::parse(&data, tl::ParserOptions::default()).unwrap();
     let parser = dom.parser();
