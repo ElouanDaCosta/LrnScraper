@@ -64,6 +64,12 @@ fn download_website(website: &WebConfig) {
             log::error_log(html_from_browser.as_ref().unwrap_err().to_string());
         }
         let parser = parse_html_content(html_from_browser.unwrap(), "title".to_string());
+        if parser.is_empty() {
+            log::error_log_with_code(
+                "Error getting the content from id:".to_string(),
+                website.id.to_string(),
+            );
+        }
         println!("{:?}", parser);
     }
     println!("Thread finished for id: {}", website.id);
