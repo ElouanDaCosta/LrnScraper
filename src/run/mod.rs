@@ -3,6 +3,7 @@ use std::thread;
 
 use crate::log;
 use serde::{Deserialize, Serialize};
+mod browser;
 
 //TODO
 // can scrap by html tag, css class or custom ?
@@ -57,8 +58,10 @@ fn download_website(website: &WebConfig) {
     println!("Thread started for id: {}", website.id);
     for url in &website.urls {
         let response = reqwest::blocking::get(url);
-        let html_content = response.unwrap().text().unwrap();
-        let test = parse_html_content(html_content, "title".to_string());
+        let html_from_request = response.unwrap().text().unwrap();
+        let html_from_browser = browser::browse_website(&url);
+        let parser = parse_html_content(html_from_browser.unwrap(), "title".to_string());
+        println!("{:?}", parser);
     }
 }
 
