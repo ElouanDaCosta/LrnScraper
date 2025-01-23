@@ -1,6 +1,8 @@
-use std::process::exit;
+use std::{fs, process::exit};
 
 use colored::Colorize;
+
+use crate::run::{WebConfig, WebConfigData};
 
 pub fn rustyspider_usage() {
     let usage = r"
@@ -37,4 +39,20 @@ __________                 __             _________        .__     .___
         \/            \/         \/             \/ |__|             \/     \/                                                                             
   ";
     println!("{}", ascii.truecolor(255, 94, 0))
+}
+
+pub fn get_config_file_content() -> Vec<WebConfig> {
+    let json_data =
+        fs::read_to_string("rustyspider_config.json").expect("Failed to read config file data");
+    let data: WebConfigData = serde_json::from_str(&json_data).expect("Invalid JSON");
+    let mut websites: Vec<WebConfig> = Vec::new();
+    for website in &data.websites {
+        websites.push(WebConfig {
+            id: website.id.clone(),
+            name: website.name.clone(),
+            save_file: website.save_file.clone(),
+            urls: website.urls.clone(),
+        });
+    }
+    websites
 }
