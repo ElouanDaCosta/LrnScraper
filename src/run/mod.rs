@@ -1,5 +1,7 @@
 use std::fs;
 use std::thread;
+use std::time::Instant;
+extern crate num_cpus;
 
 use crate::log;
 use save_content::save_html_content;
@@ -27,6 +29,8 @@ pub fn run_scrapper() {
     log::info_log("Getting the config file content...".to_string());
     let websites = get_config_file_content();
     log::info_log("Start scraping process...".to_string());
+    let num_logical_cores = num_cpus::get();
+    let max_threads = num_logical_cores * 2;
     std::thread::scope(|_scope| {
         let mut threads: Vec<thread::JoinHandle<()>> = Vec::new();
         let mut save_file: Vec<String> = Vec::new();
@@ -62,6 +66,7 @@ fn get_config_file_content() -> Vec<WebConfig> {
 // create a new thread that scrape the html from given url
 fn download_website(website: &WebConfig) {
     println!("Thread started for id: {}", website.id);
+    let start = Instant::now();
     let mut threads: Vec<thread::JoinHandle<()>> = Vec::new();
     for url in &website.urls {
         // let response = reqwest::blocking::get(url);
@@ -76,7 +81,8 @@ fn download_website(website: &WebConfig) {
     for thread in threads {
         thread.join().unwrap();
     }
-    println!("Thread finished for id: {}", website.id);
+    let duration = start.elapsed().as_millis();
+    println!("Thread finished for id: {} in {:?}ms", website.id, duration);
 }
 
 fn sub_thread_url(url: &str, id: String, save_file: String) {
