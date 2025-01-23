@@ -2,8 +2,10 @@ use std::fs;
 use std::thread;
 
 use crate::log;
+use save_content::save_html_content;
 use serde::{Deserialize, Serialize};
 mod browser;
+mod save_content;
 
 //TODO
 // can scrap by html tag, css class or custom ?
@@ -57,8 +59,8 @@ fn get_config_file_content() -> Vec<WebConfig> {
 fn download_website(website: &WebConfig) {
     println!("Thread started for id: {}", website.id);
     for url in &website.urls {
-        let response = reqwest::blocking::get(url);
-        let html_from_request = response.unwrap().text().unwrap();
+        // let response = reqwest::blocking::get(url);
+        // let html_from_request = response.unwrap().text().unwrap();
         let html_from_browser = browser::browse_website(&url);
         if html_from_browser.is_err() {
             log::error_log(html_from_browser.as_ref().unwrap_err().to_string());
@@ -70,7 +72,7 @@ fn download_website(website: &WebConfig) {
                 website.id.to_string(),
             );
         }
-        println!("{:?}", parser);
+        save_html_content(parser, "test_file");
     }
     println!("Thread finished for id: {}", website.id);
 }
