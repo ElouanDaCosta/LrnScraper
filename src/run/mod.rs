@@ -1,4 +1,5 @@
 use std::fs;
+use std::sync::{Arc, Condvar, Mutex};
 use std::thread;
 use std::time::Instant;
 extern crate num_cpus;
@@ -8,6 +9,126 @@ use save_content::save_html_content;
 use serde::{Deserialize, Serialize};
 mod browser;
 mod save_content;
+
+use std::{collections::VecDeque, thread::JoinHandle};
+
+pub struct MyThreadPool {
+    work_queue: Arc<Mutex<VecDeque<Box<dyn Send + FnOnce() -> ()>>>>, // A.
+    join_handles: Vec<Option<JoinHandle<()>>>,                        // B.
+
+    work_item_count: Arc<Mutex<i32>>, // C. // -1 implies that threads should wind down.
+    signal: Arc<Condvar>,             // D.
+}
+
+impl Drop for MyThreadPool {
+    fn drop(&mut self) {
+        {
+            // A.
+            let mut g = self.work_item_count.lock().unwrap();
+            (*g) = -1; // B.
+            self.signal.notify_all();
+        }
+
+        for h in &mut self.join_handles {
+            // C.
+            let x: JoinHandle<()> = std::mem::replace(h, None).unwrap();
+            _ = x.join();
+        }
+    }
+}
+
+impl MyThreadPool {
+    pub fn new(n: usize) -> Self {
+        let workq = Arc::new(Mutex::new(VecDeque::new()));
+        let itemcount = Arc::new(Mutex::new(0_i32));
+        let signal = Arc::new(Condvar::new());
+
+        let mut pool: MyThreadPool = MyThreadPool {
+            // A.
+            work_queue: workq.clone(),
+            join_handles: Vec::with_capacity(n),
+            work_item_count: itemcount.clone(),
+            signal: signal.clone(),
+        };
+
+        for _idx in 0..n {
+            let wq = workq.clone();
+            let itmcnt = itemcount.clone();
+            let sig = signal.clone();
+
+            let h: JoinHandle<()> = std::thread::spawn(move || {
+                // B.
+                loop {
+                    let shouldbreak: bool = {
+                        let mut g = itmcnt.lock().unwrap();
+                        while *g == 0 {
+                            g = sig.wait(g).unwrap(); // C.
+                            if (*g) == 0 {
+                                println!("{:?} Spurious Wakeup.", std::thread::current().id());
+                            }
+                        }
+
+                        if (*g) > 0 {
+                            // E.
+                            (*g) -= 1;
+                        }
+
+                        // F.
+                        (*g) == -1
+                    };
+
+                    if shouldbreak {
+                        // G.
+                        break;
+                    }
+
+                    let workfnopt = {
+                        let mut g = wq.lock().unwrap();
+                        g.pop_back()
+                    };
+
+                    if let Some(workfn) = workfnopt {
+                        workfn(); // H.
+                    } else {
+                        println!(
+                            "Worker {:?} SOMETHING IS WRONG!",
+                            std::thread::current().id()
+                        );
+                    }
+                }
+
+                // Wind-down loop
+                loop {
+                    // I.
+                    let workfnopt = {
+                        let mut g = wq.lock().unwrap();
+                        g.pop_back()
+                    };
+
+                    if let Some(workfn) = workfnopt {
+                        workfn();
+                    } else {
+                        break;
+                    }
+                }
+            });
+
+            pool.join_handles.push(Some(h)); // J.
+        }
+
+        pool
+    }
+
+    pub fn queue_work(&self, work: Box<dyn Send + FnOnce() -> ()>) {
+        // K.
+        let mut g = self.work_item_count.lock().unwrap();
+        assert!((*g) >= 0);
+        (*g) += 1;
+        let mut guard = self.work_queue.lock().unwrap();
+        guard.push_front(work);
+        self.signal.notify_one(); // L.
+    }
+}
 
 //TODO
 // can scrap by html tag, css class or custom ?
@@ -31,19 +152,10 @@ pub fn run_scrapper() {
     log::info_log("Start scraping process...".to_string());
     let num_logical_cores = num_cpus::get();
     let max_threads = num_logical_cores * 2;
-    std::thread::scope(|_scope| {
-        let mut threads: Vec<thread::JoinHandle<()>> = Vec::new();
-        let mut save_file: Vec<String> = Vec::new();
-        for website in websites.clone() {
-            let save_file_clone = website.save_file.clone();
-            let thread = std::thread::spawn(move || download_website(&website));
-            save_file.push(save_file_clone);
-            threads.push(thread);
-        }
-        for thread in threads {
-            thread.join().unwrap();
-        }
-    });
+    let pool: MyThreadPool = MyThreadPool::new(max_threads);
+    for website in websites.clone() {
+        pool.queue_work(Box::new(move || download_website(&website)));
+    }
     log::info_log("Scraping process finished successfully.".to_string());
 }
 
@@ -81,8 +193,11 @@ fn download_website(website: &WebConfig) {
     for thread in threads {
         thread.join().unwrap();
     }
-    let duration = start.elapsed().as_millis();
-    println!("Thread finished for id: {} in {:?}ms", website.id, duration);
+    let duration = start.elapsed().as_secs_f32();
+    println!(
+        "Thread finished for id: {} in {:?} secondes",
+        website.id, duration
+    );
 }
 
 fn sub_thread_url(url: &str, id: String, save_file: String) {
