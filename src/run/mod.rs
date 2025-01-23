@@ -1,4 +1,3 @@
-extern crate lazy_static;
 extern crate num_cpus;
 
 use std::time::Instant;
@@ -10,12 +9,6 @@ use serde::{Deserialize, Serialize};
 mod browser;
 mod save_content;
 mod thread_pool;
-
-lazy_static::lazy_static! {
-    static ref NUM_LOGICAL_CORES: usize = num_cpus::get();
-    static ref MAX_THREADS: usize = *NUM_LOGICAL_CORES * 2;
-    static ref MAX_WEBSITE_THREADS: usize = 2;
-}
 
 //TODO
 // can scrap by html tag, css class or custom ?
@@ -37,7 +30,9 @@ pub fn run_scrapper() {
     log::info_log("Getting the config file content...".to_string());
     let websites = utils::get_config_file_content();
     log::info_log("Start scraping process...".to_string());
-    let pool: thread_pool::MyThreadPool = thread_pool::MyThreadPool::new(*MAX_WEBSITE_THREADS);
+    let num_logical_cores: usize = num_cpus::get();
+    let max_threads: usize = num_logical_cores * 2;
+    let pool: thread_pool::MyThreadPool = thread_pool::MyThreadPool::new(max_threads);
     for website in websites.clone() {
         pool.queue_work(Box::new(move || download_website(&website)));
     }
