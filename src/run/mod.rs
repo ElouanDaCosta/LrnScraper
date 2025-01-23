@@ -152,7 +152,7 @@ pub fn run_scrapper() {
     log::info_log("Start scraping process...".to_string());
     let num_logical_cores = num_cpus::get();
     let max_threads = num_logical_cores * 2;
-    let pool: MyThreadPool = MyThreadPool::new(max_threads);
+    let pool: MyThreadPool = MyThreadPool::new(2);
     for website in websites.clone() {
         pool.queue_work(Box::new(move || download_website(&website)));
     }
@@ -179,19 +179,18 @@ fn get_config_file_content() -> Vec<WebConfig> {
 fn download_website(website: &WebConfig) {
     println!("Thread started for id: {}", website.id);
     let start = Instant::now();
-    let mut threads: Vec<thread::JoinHandle<()>> = Vec::new();
+    let num_logical_cores = num_cpus::get();
+    let max_threads = num_logical_cores * 2;
+    let pool: MyThreadPool = MyThreadPool::new(max_threads - 2);
     for url in &website.urls {
         // let response = reqwest::blocking::get(url);
         // let html_from_request = response.unwrap().text().unwrap();
         let id_clone = website.id.clone();
         let save_file_clone = website.save_file.clone();
         let url_clone = url.clone();
-        let thread =
-            std::thread::spawn(move || sub_thread_url(&url_clone, id_clone, save_file_clone));
-        threads.push(thread);
-    }
-    for thread in threads {
-        thread.join().unwrap();
+        pool.queue_work(Box::new(move || {
+            sub_thread_url(&url_clone, id_clone, save_file_clone)
+        }));
     }
     let duration = start.elapsed().as_secs_f32();
     println!(
@@ -209,8 +208,8 @@ fn sub_thread_url(url: &str, id: String, save_file: String) {
     let parser = parse_html_content(html_from_browser.unwrap(), "title".to_string());
     if parser.is_empty() {
         log::error_log_with_code(
-            "Error getting the content from id:".to_string(),
-            id.to_string(),
+            "Error getting the content for url:".to_string(),
+            url.to_string(),
         );
     }
     save_html_content(parser, &save_file);
