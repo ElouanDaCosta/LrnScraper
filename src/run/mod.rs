@@ -1,6 +1,9 @@
 extern crate lazy_static;
 extern crate num_cpus;
 
+use std::thread;
+use std::time::Instant;
+
 use crate::log;
 use crate::utils;
 use save_content::save_html_content;
@@ -43,17 +46,23 @@ pub fn run_scrapper() {
 
 // create a new thread that scrape the html from given url
 fn download_website(website: &WebConfig) {
-    // let start = Instant::now();
-    let pool: thread_pool::MyThreadPool =
-        thread_pool::MyThreadPool::new(*MAX_THREADS - *MAX_WEBSITE_THREADS);
+    let start = Instant::now();
+    println!("Thread started for id: {}", website.id);
+    let mut threads: Vec<thread::JoinHandle<()>> = Vec::new();
     for url in &website.urls {
         let save_file_clone = website.save_file.clone();
         let url_clone = url.clone();
-        pool.queue_work(Box::new(move || {
-            sub_thread_url(&url_clone, save_file_clone)
-        }));
+        let thread = std::thread::spawn(move || sub_thread_url(&url_clone, save_file_clone));
+        threads.push(thread);
     }
-    // let duration = start.elapsed().as_secs_f32();
+    for thread in threads {
+        thread.join().unwrap();
+    }
+    let duration = start.elapsed().as_secs_f32();
+    println!(
+        "Thread finished for id: {} in {:?} secondes",
+        website.id, duration
+    );
 }
 
 fn sub_thread_url(url: &str, save_file: String) {
