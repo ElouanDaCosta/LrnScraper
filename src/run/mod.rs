@@ -1,7 +1,6 @@
 extern crate lazy_static;
 extern crate num_cpus;
 
-use std::thread;
 use std::time::Instant;
 
 use crate::log;
@@ -48,16 +47,14 @@ pub fn run_scrapper() {
 fn download_website(website: &WebConfig) {
     let start = Instant::now();
     println!("Thread started for id: {}", website.id);
-    let mut threads: Vec<thread::JoinHandle<()>> = Vec::new();
+    let mut crawl_url_vec: Vec<String> = Vec::new();
     for url in &website.urls {
         let save_file_clone = website.save_file.clone();
         let url_clone = url.clone();
-        let thread = std::thread::spawn(move || sub_thread_url(&url_clone, save_file_clone));
-        threads.push(thread);
+        crawl_url(url, "test".to_string());
+        sub_thread_url(&url_clone, save_file_clone);
     }
-    for thread in threads {
-        thread.join().unwrap();
-    }
+    print!("{:?}", crawl_url_vec);
     let duration = start.elapsed().as_secs_f32();
     println!(
         "Thread finished for id: {} in {:?} secondes",
@@ -71,6 +68,21 @@ fn sub_thread_url(url: &str, save_file: String) {
         log::error_log(html_from_browser.as_ref().unwrap_err().to_string());
     }
     let parser = parse_html_content(html_from_browser.unwrap(), "title".to_string());
+    if parser.is_empty() {
+        log::error_log_with_code(
+            "Error getting the content for url:".to_string(),
+            url.to_string(),
+        );
+    }
+    save_html_content(parser, &save_file);
+}
+
+fn crawl_url(url: &str, save_file: String) {
+    let html_from_browser = browser::browse_website(&url);
+    if html_from_browser.is_err() {
+        log::error_log(html_from_browser.as_ref().unwrap_err().to_string());
+    }
+    let parser = parse_html_content(html_from_browser.unwrap(), "a".to_string());
     if parser.is_empty() {
         log::error_log_with_code(
             "Error getting the content for url:".to_string(),
