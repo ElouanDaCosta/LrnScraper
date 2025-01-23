@@ -10,9 +10,6 @@ mod browser;
 mod save_content;
 mod thread_pool;
 
-//TODO
-// can scrap by html tag, css class or custom ?
-
 #[derive(Deserialize, Serialize, Debug, Clone, PartialEq)]
 pub struct WebConfigData {
     pub websites: Vec<WebConfig>,
@@ -24,6 +21,13 @@ pub struct WebConfig {
     pub name: String,
     pub save_file: String,
     pub urls: Vec<String>,
+}
+//TODO
+//use the enum to give option to user when running run command
+pub enum ScraperOption {
+    HtmlTag,
+    CssClass,
+    Id,
 }
 
 pub fn run_scrapper() {
