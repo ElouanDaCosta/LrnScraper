@@ -26,3 +26,5 @@ Cargo.lock
 
 # IDE's
 .vscode
+
+/data
