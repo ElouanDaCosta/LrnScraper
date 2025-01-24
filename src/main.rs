@@ -1,4 +1,5 @@
 use std::{env, process::exit};
+mod clean;
 mod init;
 pub mod log;
 mod run;
@@ -25,6 +26,7 @@ fn main() {
     match args.get(1).map(|s| s.as_str()) {
         Some("init") => init::init_config(),
         Some("run") => run::run_scrapper(),
+        Some("clean") => clean::clean_data_folder(),
         Some("help") => utils::rustyspider_usage(),
         _ => {
             usage_and_exit("Invalid command".to_string());

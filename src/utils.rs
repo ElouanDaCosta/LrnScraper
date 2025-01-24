@@ -17,6 +17,7 @@ RustySpider's web scraper cli.
 Commands:
     run             Run the scraping process
     init            Init the config file of RustySpider
+    clean           Clean the data folder from all files inside
     help            Show this help message
 
 Options:
