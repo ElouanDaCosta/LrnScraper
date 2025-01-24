@@ -36,7 +36,6 @@ pub fn run_scrapper() {
     let num_logical_cores: usize = num_cpus::get();
     let max_threads: usize = num_logical_cores * 2;
     scraper_option(&select_option, websites, max_threads);
-    log::info_log("Start scraping process...".to_string());
 }
 
 fn scraper_option(option: &str, websites: Vec<WebConfig>, max_threads: usize) {
@@ -55,6 +54,7 @@ fn html_scraper(websites: Vec<WebConfig>, max_threads: usize) {
         "Which html-tag do you want to scrap ?".to_string(),
         "Error getting the user input".to_string(),
     );
+    log::info_log("Start scraping process...".to_string());
     let pool: thread_pool::MyThreadPool = thread_pool::MyThreadPool::new(max_threads);
     for website in websites.clone() {
         let html_tag_clone = html_tag.clone();
@@ -119,6 +119,7 @@ fn css_scraper(websites: Vec<WebConfig>, max_threads: usize) {
         "Which css-class do you want to scrap ?".to_string(),
         "Error getting the user input".to_string(),
     );
+    log::info_log("Start scraping process...".to_string());
     let pool: thread_pool::MyThreadPool = thread_pool::MyThreadPool::new(max_threads);
     for website in websites.clone() {
         let html_tag_clone = html_tag.clone();
@@ -175,6 +176,7 @@ fn id_scraper(websites: Vec<WebConfig>, max_threads: usize) {
         "Which id do you want to scrap ?".to_string(),
         "Error getting the user input".to_string(),
     );
+    log::info_log("Start scraping process...".to_string());
     let pool: thread_pool::MyThreadPool = thread_pool::MyThreadPool::new(max_threads);
     for website in websites.clone() {
         let id_clone = id.clone();
