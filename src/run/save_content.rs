@@ -25,8 +25,8 @@ pub fn save_in_csv(
     let mut wtr = Writer::from_path(filename_path)?;
     wtr.write_record(&[selector])?;
     for i in data {
-        wtr.write_record(&[i])?;
+        wtr.write_record([i])?;
+        wtr.flush()?;
     }
-    wtr.flush()?;
     Ok(())
 }
