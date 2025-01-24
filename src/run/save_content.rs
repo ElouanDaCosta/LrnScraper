@@ -1,4 +1,6 @@
-use std::{fs::OpenOptions, io::Write};
+use std::{error::Error, fs::OpenOptions, io::Write};
+
+use csv::Writer;
 
 pub fn save_html_content(data: Vec<String>, filename: &str) {
     let filename_path = "data/".to_string() + filename + ".txt";
@@ -12,4 +14,19 @@ pub fn save_html_content(data: Vec<String>, filename: &str) {
         f.write_all(line_break.as_bytes())
             .expect("Unable to write data");
     }
+}
+
+pub fn save_in_csv(
+    data: Vec<String>,
+    filename: &str,
+    selector: &str,
+) -> Result<(), Box<dyn Error>> {
+    let filename_path = "data/".to_string() + filename + ".csv";
+    let mut wtr = Writer::from_path(filename_path)?;
+    wtr.write_record(&[selector])?;
+    for i in data {
+        wtr.write_record(&[i])?;
+    }
+    wtr.flush()?;
+    Ok(())
 }

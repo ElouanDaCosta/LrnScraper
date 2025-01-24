@@ -1,10 +1,11 @@
 extern crate num_cpus;
 
+use std::ptr::null;
 use std::time::Instant;
 
 use crate::log;
 use crate::utils;
-use save_content::save_html_content;
+use save_content::{save_html_content, save_in_csv};
 use serde::{Deserialize, Serialize};
 mod browser;
 mod save_content;
@@ -69,7 +70,7 @@ fn download_website_by_html(website: &WebConfig, html_tag: &str) {
     for url in &website.urls {
         let save_file_clone = website.save_file.clone();
         let url_clone = url.clone();
-        parse_html_tag_and_save_content(&url_clone, save_file_clone, html_tag.to_string());
+        parse_html_tag_and_save_content(&url_clone, save_file_clone, html_tag);
     }
     let duration = start.elapsed().as_secs_f32();
     println!(
@@ -78,19 +79,24 @@ fn download_website_by_html(website: &WebConfig, html_tag: &str) {
     );
 }
 
-fn parse_html_tag_and_save_content(url: &str, save_file: String, tag_selector: String) {
+fn parse_html_tag_and_save_content(url: &str, save_file: String, tag_selector: &str) {
     let html_from_browser = browser::browse_website(&url);
     if html_from_browser.is_err() {
         log::error_log(html_from_browser.as_ref().unwrap_err().to_string());
     }
-    let parser = parse_html_tag_content(html_from_browser.unwrap(), tag_selector);
+    let parser = parse_html_tag_content(html_from_browser.unwrap(), tag_selector.to_string());
     if parser.is_empty() {
         log::error_log_with_code(
             "Error getting the content for url:".to_string(),
             url.to_string(),
         );
     }
-    save_html_content(parser, &save_file);
+    let error = save_in_csv(parser, &save_file, &tag_selector);
+    if let Err(e) = &error {
+        let err = e.to_string();
+        log::error_log_with_code("failed save in csv file".to_string(), err);
+    }
+    // save_html_content(parser, &save_file);
 }
 
 // parse the given html document
