@@ -42,6 +42,7 @@ fn scraper_option(option: &str, websites: Vec<WebConfig>, max_threads: usize) {
     match option {
         "html-tag" => html_scraper(websites, max_threads),
         "css-class" => css_scraper(websites, max_threads),
+        "id" => id_scraper(websites, max_threads),
         _ => {
             panic!()
         }
@@ -157,6 +158,62 @@ fn parse_css_class_content(data: String, class_selector: String) -> Vec<String> 
     let elements = dom.get_elements_by_class_name(&class_selector);
     let mut nodes = Vec::new();
     for element in elements {
+        let node = element.get(parser).unwrap();
+        nodes.push(node.inner_text(parser).to_string());
+    }
+    nodes
+}
+
+fn id_scraper(websites: Vec<WebConfig>, max_threads: usize) {
+    let id = utils::prompt_message(
+        "Which id do you want to scrap ?".to_string(),
+        "Error getting the user input".to_string(),
+    );
+    let pool: thread_pool::MyThreadPool = thread_pool::MyThreadPool::new(max_threads);
+    for website in websites.clone() {
+        let id_clone = id.clone();
+        pool.queue_work(Box::new(move || {
+            download_website_by_id(&website, &id_clone)
+        }));
+    }
+}
+
+fn download_website_by_id(website: &WebConfig, id: &str) {
+    let start = Instant::now();
+    println!("Thread started for id: {}", website.id);
+    for url in &website.urls {
+        let save_file_clone = website.save_file.clone();
+        let url_clone = url.clone();
+        parse_id_and_save_content(&url_clone, save_file_clone, id.to_string());
+    }
+    let duration = start.elapsed().as_secs_f32();
+    println!(
+        "Thread finished for id: {} in {:?} secondes",
+        website.id, duration
+    );
+}
+
+fn parse_id_and_save_content(url: &str, save_file: String, id: String) {
+    let html_from_browser = browser::browse_website(&url);
+    if html_from_browser.is_err() {
+        log::error_log(html_from_browser.as_ref().unwrap_err().to_string());
+    }
+    let parser = parse_id_content(html_from_browser.unwrap(), id);
+    if parser.is_empty() {
+        log::error_log_with_code(
+            "Error getting the content for url:".to_string(),
+            url.to_string(),
+        );
+    }
+    save_html_content(parser, &save_file);
+}
+
+fn parse_id_content(data: String, id: String) -> Vec<String> {
+    let dom = tl::parse(&data, tl::ParserOptions::default()).unwrap();
+    let parser = dom.parser();
+    let elements = dom.get_element_by_id(id.as_bytes());
+    let mut nodes = Vec::new();
+    if let Some(element) = elements {
         let node = element.get(parser).unwrap();
         nodes.push(node.inner_text(parser).to_string());
     }

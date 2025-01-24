@@ -98,7 +98,7 @@ pub fn get_scraper_option() -> Vec<String> {
     let scraper_option: Vec<String> = vec![
         "html-tag".to_string(),
         "css-class".to_string(),
-        "Id".to_string(),
+        "id".to_string(),
     ];
     scraper_option
 }
