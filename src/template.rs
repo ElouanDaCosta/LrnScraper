@@ -4,6 +4,7 @@ pub fn config_file_template() -> String {
     {
       "id": "example",
       "name": "example of a website object",
+      "save_file": "example.txt",
       "urls": [
         "https://example.com",
         "https://example2.com"
@@ -12,6 +13,7 @@ pub fn config_file_template() -> String {
     {
       "id": "example",
       "name": "example of a website object",
+      "save_file": "example.csv",
       "urls": [
         "https://example.com",
         "https://example2.com"
