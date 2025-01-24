@@ -1,11 +1,10 @@
 extern crate num_cpus;
 
-use std::ptr::null;
 use std::time::Instant;
 
 use crate::log;
 use crate::utils;
-use save_content::{save_html_content, save_in_csv};
+use save_content::match_file_extension;
 use serde::{Deserialize, Serialize};
 mod browser;
 mod save_content;
@@ -91,12 +90,8 @@ fn parse_html_tag_and_save_content(url: &str, save_file: String, tag_selector: &
             url.to_string(),
         );
     }
-    let error = save_in_csv(parser, &save_file, &tag_selector);
-    if let Err(e) = &error {
-        let err = e.to_string();
-        log::error_log_with_code("failed save in csv file".to_string(), err);
-    }
-    // save_html_content(parser, &save_file);
+    let file_extension = utils::split_file_extension(&save_file);
+    match_file_extension(parser, &save_file, &file_extension, tag_selector);
 }
 
 // parse the given html document
@@ -149,14 +144,16 @@ fn parse_css_class_and_save_content(url: &str, save_file: String, class_selector
     if html_from_browser.is_err() {
         log::error_log(html_from_browser.as_ref().unwrap_err().to_string());
     }
-    let parser = parse_css_class_content(html_from_browser.unwrap(), class_selector);
+    let parser = parse_css_class_content(html_from_browser.unwrap(), class_selector.clone());
     if parser.is_empty() {
         log::error_log_with_code(
             "Error getting the content for url:".to_string(),
             url.to_string(),
         );
     }
-    save_html_content(parser, &save_file);
+    let file_extension = utils::split_file_extension(&save_file);
+    let class_selector_clone = class_selector.clone();
+    match_file_extension(parser, &save_file, &file_extension, &class_selector_clone);
 }
 
 fn parse_css_class_content(data: String, class_selector: String) -> Vec<String> {
@@ -206,14 +203,16 @@ fn parse_id_and_save_content(url: &str, save_file: String, id: String) {
     if html_from_browser.is_err() {
         log::error_log(html_from_browser.as_ref().unwrap_err().to_string());
     }
-    let parser = parse_id_content(html_from_browser.unwrap(), id);
+    let parser = parse_id_content(html_from_browser.unwrap(), id.clone());
     if parser.is_empty() {
         log::error_log_with_code(
             "Error getting the content for url:".to_string(),
             url.to_string(),
         );
     }
-    save_html_content(parser, &save_file);
+    let file_extension = utils::split_file_extension(&save_file);
+    let id_clone = id.clone();
+    match_file_extension(parser, &save_file, &file_extension, &id_clone);
 }
 
 fn parse_id_content(data: String, id: String) -> Vec<String> {

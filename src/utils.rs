@@ -109,3 +109,9 @@ pub fn prompt_message(message: String, error_message: String) -> String {
     let message = Text::new(&message).prompt().expect(&error_message);
     return message;
 }
+
+pub fn split_file_extension(filename: &str) -> String {
+    let test = filename.split(".");
+    let collection: Vec<&str> = test.collect();
+    return collection.last().unwrap().to_string();
+}
