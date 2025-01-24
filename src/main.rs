@@ -6,7 +6,7 @@ mod run;
 pub mod template;
 pub mod utils;
 
-const VERSION: &'static str = "0.5.0";
+const VERSION: &'static str = "0.6.0";
 
 fn main() {
     let args: Vec<String> = env::args().collect();
