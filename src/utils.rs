@@ -1,6 +1,10 @@
 use std::{fs, process::exit};
 
 use colored::Colorize;
+use inquire::{
+    ui::{Attributes, Color, RenderConfig, StyleSheet, Styled},
+    InquireError, Select, Text,
+};
 
 use crate::run::{WebConfig, WebConfigData};
 
@@ -55,4 +59,52 @@ pub fn get_config_file_content() -> Vec<WebConfig> {
         });
     }
     websites
+}
+
+pub fn get_render_config() -> RenderConfig<'static> {
+    let mut render_config = RenderConfig::default();
+    render_config.prompt_prefix = Styled::new("?").with_fg(Color::LightMagenta);
+    render_config.highlighted_option_prefix = Styled::new("➠").with_fg(Color::DarkMagenta);
+    render_config.selected_checkbox = Styled::new("☑").with_fg(Color::LightMagenta);
+    render_config.scroll_up_prefix = Styled::new("⇞").with_fg(Color::DarkMagenta);
+    render_config.scroll_down_prefix = Styled::new("⇟").with_fg(Color::DarkMagenta);
+    render_config.unselected_checkbox = Styled::new("☐").with_fg(Color::DarkMagenta);
+    render_config.selected_option = Some(StyleSheet::new().with_fg(Color::DarkMagenta));
+    render_config.text_input = StyleSheet::new().with_fg(Color::DarkMagenta);
+
+    render_config.error_message = render_config
+        .error_message
+        .with_prefix(Styled::new("❌").with_fg(Color::LightRed));
+
+    render_config.answer = StyleSheet::new()
+        .with_attr(Attributes::ITALIC)
+        .with_fg(Color::LightYellow);
+
+    render_config.help_message = StyleSheet::new().with_fg(Color::DarkYellow);
+
+    render_config
+}
+
+pub fn get_select_option(
+    prompt: String,
+    option: Vec<String>,
+) -> std::result::Result<String, InquireError> {
+    let ans: std::result::Result<String, InquireError> = Select::new(&prompt, option).prompt();
+
+    return ans;
+}
+
+pub fn get_scraper_option() -> Vec<String> {
+    let scraper_option: Vec<String> = vec![
+        "html-tag".to_string(),
+        "css-class".to_string(),
+        "Id".to_string(),
+    ];
+    scraper_option
+}
+
+pub fn prompt_message(message: String, error_message: String) -> String {
+    inquire::set_global_render_config(get_render_config());
+    let message = Text::new(&message).prompt().expect(&error_message);
+    return message;
 }

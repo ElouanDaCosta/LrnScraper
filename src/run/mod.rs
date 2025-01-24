@@ -22,25 +22,45 @@ pub struct WebConfig {
     pub save_file: String,
     pub urls: Vec<String>,
 }
-//TODO
-//use the enum to give option to user when running run command
-pub enum ScraperOption {
-    HtmlTag,
-    CssClass,
-    Id,
-}
 
 pub fn run_scrapper() {
     log::info_log("Getting the config file content...".to_string());
     let websites = utils::get_config_file_content();
-    log::info_log("Start scraping process...".to_string());
+    inquire::set_global_render_config(utils::get_render_config());
+    let select_option = utils::get_select_option(
+        "Select what do you want to scrap".to_string(),
+        utils::get_scraper_option(),
+    )
+    .unwrap();
     let num_logical_cores: usize = num_cpus::get();
     let max_threads: usize = num_logical_cores * 2;
-    let pool: thread_pool::MyThreadPool = thread_pool::MyThreadPool::new(max_threads);
-    for website in websites.clone() {
-        pool.queue_work(Box::new(move || download_website(&website)));
+    scraper_option(&select_option, websites, max_threads);
+    log::info_log("Start scraping process...".to_string());
+}
+
+fn scraper_option(option: &str, websites: Vec<WebConfig>, max_threads: usize) {
+    match option {
+        "html-tag" => html_scraper(websites, max_threads),
+        _ => {
+            panic!()
+        }
     }
 }
+
+fn html_scraper(websites: Vec<WebConfig>, max_threads: usize) {
+    let html_tag = utils::prompt_message(
+        "Which html-tag do you want to scrap ?".to_string(),
+        "Error getting the user input".to_string(),
+    );
+    let pool: thread_pool::MyThreadPool = thread_pool::MyThreadPool::new(max_threads);
+    for website in websites.clone() {
+        let html_tag_clone = html_tag.clone();
+        pool.queue_work(Box::new(move || {
+            download_website(&website, &html_tag_clone)
+        }));
+    }
+}
+
 /// The `download_website` function in Rust downloads multiple URLs concurrently and prints the time
 /// taken for each website.
 ///
@@ -49,13 +69,13 @@ pub fn run_scrapper() {
 /// * `website`: The `download_website` function takes a reference to a `WebConfig` struct as a
 /// parameter. The `WebConfig` struct likely contains information about a website to be downloaded, such
 /// as its ID and a list of URLs to download. The function iterates over each URL in the `urls`
-fn download_website(website: &WebConfig) {
+fn download_website(website: &WebConfig, html_tag: &str) {
     let start = Instant::now();
     println!("Thread started for id: {}", website.id);
     for url in &website.urls {
         let save_file_clone = website.save_file.clone();
         let url_clone = url.clone();
-        parse_and_save_content(&url_clone, save_file_clone, "title".to_string());
+        parse_and_save_content(&url_clone, save_file_clone, html_tag.to_string());
     }
     let duration = start.elapsed().as_secs_f32();
     println!(
