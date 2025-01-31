@@ -56,6 +56,8 @@ pub fn get_config_file_content() -> Vec<WebConfig> {
             id: website.id.clone(),
             name: website.name.clone(),
             save_file: website.save_file.clone(),
+            scraping: website.scraping.clone(),
+            scraping_target: website.scraping_target.clone(),
             urls: website.urls.clone(),
         });
     }
