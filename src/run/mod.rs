@@ -76,6 +76,9 @@ fn scrap_website(website: &WebConfig) {
                 save_file_clone,
                 &website.scraping_target,
             ),
+            "id" => {
+                parse_id_and_save_content(&url_clone, save_file_clone, &website.scraping_target)
+            }
             _ => {}
         }
     }
@@ -146,42 +149,12 @@ fn parse_css_class_content(data: String, class_selector: &str) -> Vec<String> {
     nodes
 }
 
-fn id_scraper(websites: Vec<WebConfig>, max_threads: usize) {
-    let id = utils::prompt_message(
-        "Which id do you want to scrap ?".to_string(),
-        "Error getting the user input".to_string(),
-    );
-    log::info_log("Start scraping process...".to_string());
-    let pool: thread_pool::MyThreadPool = thread_pool::MyThreadPool::new(max_threads);
-    for website in websites.clone() {
-        let id_clone = id.clone();
-        pool.queue_work(Box::new(move || {
-            download_website_by_id(&website, &id_clone)
-        }));
-    }
-}
-
-fn download_website_by_id(website: &WebConfig, id: &str) {
-    let start = Instant::now();
-    println!("Thread started for id: {}", website.id);
-    for url in &website.urls {
-        let save_file_clone = website.save_file.clone();
-        let url_clone = url.clone();
-        parse_id_and_save_content(&url_clone, save_file_clone, id.to_string());
-    }
-    let duration = start.elapsed().as_secs_f32();
-    println!(
-        "Thread finished for id: {} in {:?} secondes",
-        website.id, duration
-    );
-}
-
-fn parse_id_and_save_content(url: &str, save_file: String, id: String) {
+fn parse_id_and_save_content(url: &str, save_file: String, id: &str) {
     let html_from_browser = browser::browse_website(&url);
     if html_from_browser.is_err() {
         log::error_log(html_from_browser.as_ref().unwrap_err().to_string());
     }
-    let parser = parse_id_content(html_from_browser.unwrap(), id.clone());
+    let parser = parse_id_content(html_from_browser.unwrap(), id.to_string());
     if parser.is_empty() {
         log::error_log_with_code(
             "Error getting the content for url:".to_string(),
@@ -189,7 +162,7 @@ fn parse_id_and_save_content(url: &str, save_file: String, id: String) {
         );
     }
     let file_extension = utils::split_file_extension(&save_file);
-    let id_clone = id.clone();
+    let id_clone = id;
     match_file_extension(parser, &save_file, &file_extension, &id_clone);
 }
 
