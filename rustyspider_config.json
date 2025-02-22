@@ -1,0 +1,24 @@
+{
+  "websites": [
+    {
+      "id": "app",
+      "name": "Apple website",
+      "save_file": "Apple.csv",
+      "scraping": "id",
+      "scraping_target": "globalnav-menubutton-link-search",
+      "urls": [
+        "https://www.apple.com/fr/"
+      ]
+    },
+    {
+      "id": "wik",
+      "name": "Wikipedia website",
+      "save_file": "Wikipedia.txt",
+      "scraping": "html-tag",
+      "scraping_target": "h2",
+      "urls": [
+        "https://fr.wikipedia.org/wiki/Wikipédia:Accueil_principal"
+      ]
+    }
+  ]
+}

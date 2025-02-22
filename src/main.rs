@@ -14,10 +14,10 @@ fn main() {
     if let Some(arg) = args.iter().last() {
         match arg.as_str().trim() {
             "-v" => {
-                utils::command_usage(&rustyspider_version());
+                utils::command_usage(&lrnscraper_version());
             }
             "--version" => {
-                utils::command_usage(&rustyspider_version());
+                utils::command_usage(&lrnscraper_version());
             }
             _ => {}
         }
@@ -27,7 +27,7 @@ fn main() {
         Some("init") => init::init_config(),
         Some("run") => run::run_scrapper(),
         Some("clean") => clean::clean_data_folder(),
-        Some("help") => utils::rustyspider_usage(),
+        Some("help") => utils::lrnscraper_usage(),
         _ => {
             usage_and_exit("Invalid command".to_string());
             return;
@@ -40,12 +40,12 @@ fn usage_and_exit(msg: String) {
         eprintln!("{}", msg);
     }
 
-    utils::rustyspider_usage();
+    utils::lrnscraper_usage();
 
     exit(0);
 }
 
-pub fn rustyspider_version() -> String {
-    let usage = format!("rustyspider {VERSION}");
+pub fn lrnscraper_version() -> String {
+    let usage = format!("lrnscraper {VERSION}");
     usage
 }

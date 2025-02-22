@@ -8,22 +8,22 @@ use inquire::{
 
 use crate::run::{WebConfig, WebConfigData};
 
-pub fn rustyspider_usage() {
+pub fn lrnscraper_usage() {
     let usage = r"
-Usage: rustyspider command [options]
+Usage: lrnscraper command [options]
 
-RustySpider's web scraper cli.
+lrnscraper's web scraper cli.
 
 Commands:
     run             Run the scraping process
-    init            Init the config file of RustySpider
+    init            Init the config file of lrnscraper
     clean           Clean the data folder from all files inside
     help            Show this help message
 
 Options:
 
     -h, --help      Show command usage
-    -v, --version   Show the current version of RustySpider
+    -v, --version   Show the current version of lrnscraper
 ";
 
     println!("{}", usage);
@@ -34,21 +34,21 @@ pub fn command_usage(usage: &str) {
     exit(0);
 }
 
-pub fn rustyspider_ascii_art() {
+pub fn lrnscraper_ascii_art() {
     let ascii = r"
-__________                 __             _________        .__     .___              
-\______   \ __ __  _______/  |_  ___.__. /   _____/______  |__|  __| _/ ____ _______ 
- |       _/|  |  \/  ___/\   __\<   |  | \_____  \ \____ \ |  | / __ |_/ __ \\_  __ \
- |    |   \|  |  /\___ \  |  |   \___  | /        \|  |_> >|  |/ /_/ |\  ___/ |  | \/
- |____|_  /|____//____  > |__|   / ____|/_______  /|   __/ |__|\____ | \___  >|__|   
-        \/            \/         \/             \/ |__|             \/     \/                                                                             
+.____                   _________                                        
+|    |  _______  ____  /   _____/ ________________  ______   ___________ 
+|    |  \_  __ \/    \ \_____  \_/ ___\_  __ \__  \ \____ \_/ __ \_  __ \
+|    |___|  | \/   |  \/        \  \___|  | \// __ \|  |_> >  ___/|  | \/
+|_______ \__|  |___|  /_______  /\___  >__|  (____  /   __/ \___  >__|   
+        \/          \/        \/     \/           \/|__|        \/       
   ";
     println!("{}", ascii.truecolor(255, 94, 0))
 }
 
 pub fn get_config_file_content() -> Vec<WebConfig> {
     let json_data =
-        fs::read_to_string("rustyspider_config.json").expect("Failed to read config file data");
+        fs::read_to_string("lrnscraper_config.json").expect("Failed to read config file data");
     let data: WebConfigData = serde_json::from_str(&json_data).expect("Invalid JSON");
     let mut websites: Vec<WebConfig> = Vec::new();
     for website in &data.websites {

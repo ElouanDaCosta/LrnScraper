@@ -1,4 +1,4 @@
-# RustySpider
+# LrnScraper
 
 A Web Scraper written in Rust.
 
@@ -6,17 +6,17 @@ A Web Scraper written in Rust.
 
 ```bash
 # Initialize a new configuration file
-rusty-spider init
+lrnscrap init
 ```
 
 ```bash
 # Run the web scraper
-rusty-spider run
+lrnscrap run
 ```
 
 ```bash
 # Clean the data folder
-rusty-spider clean
+lrnscrap clean
 ```
 
 ## Configuration File
